@@ -87,11 +87,11 @@ function chooseColour() {
     return colour;
 }
 
+//Generate a random name and colour for each user so you can tell who is drawing what.
 myName = generateName();
 myColour = chooseColour();
 world = {};
 
-//XXX: TODO Make this prettier!
 function drawCircle(context,entity) {
     with(context) {
         beginPath();              
@@ -131,6 +131,7 @@ function clearFrame() {
 // This actually draws the frame
 function renderFrame() {
     clearFrame();
+    //Indicate what the user's colour is:
     context.fillStyle = 'white';
     context.font = "30px Times";
     context.fillText("My Colour:",10,50);
@@ -289,7 +290,6 @@ mouse = (function() {
 })();
 
 // Add the application specific mouse listeners!
-//XXX: TODO Make these prettier!
 mouse.mousedowners.push(function(x,y,clicked,e) {
     addEntityWithoutName({'x':x,'y':y,'colour':'blue'});
 });
