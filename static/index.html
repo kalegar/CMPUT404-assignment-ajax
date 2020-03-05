@@ -6,6 +6,20 @@
     <meta content='width=device-width; height=device-height; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;' name='viewport' />
     <meta name="viewport" content="width=device-width" />
     <meta name="license" content="
+        Copyright 2020 Andrew Smith
+
+        Licensed under the Apache License, Version 2.0 (the "License");
+        you may not use this file except in compliance with the License.
+        You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+        Unless required by applicable law or agreed to in writing, software
+        distributed under the License is distributed on an "AS IS" BASIS,
+        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        See the License for the specific language governing permissions and
+        limitations under the License.
+    
         Copyright 2013 Abram Hindle
         
         Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,35 +52,59 @@ function sendJSONXMLHTTPRequest(url, objects, callback) {
         if (xhr.readyState==4) {
             try {
                 if (xhr.status==200) {
-                    //XXX: parse some JSON from the request!
-                    //XXX: Pass the data to the callback!
+                    if (xhr.responseText.length > 0) {
+                        callback(JSON.parse(xhr.responseText));
+                    }
                 }
             } 
             catch(e) {
-                alert('Error: ' + e.name);
+                alert('Error: ' + e.name + ', ' + e);
             }
         }
     };
-    //XXX: POST to a URL
-    //XXX: set the mimetype and the accept headers!
-    // Remember to use application/json !
+	xhr.open("POST",url);
+	xhr.setRequestHeader("Content-Type","application/json;charset=UTF-8");
+    xhr.setRequestHeader("Accept","application/json");
+	xhr.send(JSON.stringify(objects));
 }
 
+function generateName() {
+    var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    var name = '';
+    for ( var i = 0; i < 2; i++ ) {
+        name += characters.charAt(Math.floor(Math.random() * 26));
+    }
+    return name;
+}
 
+function chooseColour() {
+    var characters = '0123456789ABCDEF';
+    var colour = '#';
+    for ( var i=0; i<6; i++){
+        colour += characters[Math.floor(Math.random()*16)];
+    }
+    return colour;
+}
+
+myName = generateName();
+myColour = chooseColour();
 world = {};
 
 //XXX: TODO Make this prettier!
 function drawCircle(context,entity) {
     with(context) {
         beginPath();              
-        lineWidth = 3;
         var x = entity["x"];
         var y = entity["y"];
         //moveTo(x,y);
+        arc(x, y, (entity["radius"])?entity["radius"]:13, 0, 2.0 * Math.PI, false);  
         fillStyle = entity["colour"];
+        if (entity["fill"]){
+            fill();
+        }
+        lineWidth = 3;
         strokeStyle = fillStyle;
-        arc(x, y, (entity["radius"])?entity["radius"]:50, 0, 2.0 * Math.PI, false);  
-        stroke();                                
+        stroke();
     }
 }
 
@@ -75,7 +113,7 @@ function prepEntity(entity) {
         entity["colour"] = "#FF0000";
     }
     if (!entity["radius"]) {
-        entity["radius"] = 50;
+        entity["radius"] = 13;
     }
     return entity;
 }
@@ -92,6 +130,11 @@ function clearFrame() {
 // This actually draws the frame
 function renderFrame() {
     clearFrame();
+    context.fillStyle = 'white';
+    context.font = "30px Times";
+    context.fillText("My Colour:",10,50);
+    context.fillStyle = myColour;
+    context.fillRect(150,20,50,50);
     for (var key in world) {
         var entity = world[key];
         drawCircle(context,prepEntity(entity));
@@ -136,15 +179,15 @@ function getPosition(e) {
 
 function addEntity(entity, data) {
     world[entity] = data;
-    drawNextFrame(); // (but should we?)
-    //XXX: Send a XHTML Request that updates the entity you just  modified!
+    //drawNextFrame(); // (but should we?)
+    sendJSONXMLHTTPRequest("/entity/"+entity,data,() => {console.log("update successful")})
 
 }
 
 var counter = 0;
 function addEntityWithoutName(data) {
     //var name = "X"+Math.floor((Math.random()*100)+1);
-    var name = "X"+(counter++)%100;
+    var name = myName+(counter++)%100;
     addEntity(name,data);
 }
 
@@ -255,14 +298,14 @@ mouse.mouseuppers.push(function(x,y,clicked,e) {
 });
 
 mouse.mousedraggers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'green',
-                          'radius':10});
+    addEntityWithoutName({'x':x,'y':y,'colour':myColour,
+                          'radius':10,'fill':1});
 });
 
 
 function update() {
-    //XXX: TODO Get the world from the webservice using a XMLHTTPRequest
-    drawFrame();
+    sendJSONXMLHTTPRequest("/world",{},data => {world = data; drawNextFrame(); drawFrame();})
+    
 }
 
 // 30 frames per second
