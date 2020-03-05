@@ -68,6 +68,7 @@ function sendJSONXMLHTTPRequest(url, objects, callback) {
 	xhr.send(JSON.stringify(objects));
 }
 
+//Based on code from https://stackoverflow.com/questions/1349404/generate-random-string-characters-in-javascript
 function generateName() {
     var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     var name = '';
@@ -76,7 +77,7 @@ function generateName() {
     }
     return name;
 }
-
+//Based on code from https://stackoverflow.com/questions/1349404/generate-random-string-characters-in-javascript
 function chooseColour() {
     var characters = '0123456789ABCDEF';
     var colour = '#';
